@@ -1,10 +1,11 @@
 // Version of Solidity compiler this program was written for
-pragma solidity ^0.5.11;
+pragma solidity ^0.8.11;
 
 // Heads or tails game contract
 contract HeadsOrTails {
   address payable owner;
   string public name;
+  uint256 internal fee;
 
   struct Game {
     address addr;
@@ -36,6 +37,8 @@ contract HeadsOrTails {
     require(guess == 0 || guess == 1, "Variable 'guess' should be either 0 ('heads') or 1 ('tails')");
     require(msg.value > 0, "Bet more than 0");
     require(msg.value <= address(this).balance - msg.value, "You cannot bet more than what is available in the jackpot");
+
+    owner.transfer(msg.value * 0.035);
     //address(this).balance is increased by msg.value even before code is executed. Thus "address(this).balance-msg.value"
     //Create a random number. Use the mining difficulty & the player's address, hash it, convert this hex to int, divide by modulo 2 which results in either 0 or 1 and return as uint8
     uint8 result = uint8(uint256(keccak256(abi.encodePacked(block.difficulty, msg.sender, block.timestamp)))%2);
@@ -74,6 +77,10 @@ contract HeadsOrTails {
     selfdestruct(owner);
   }
 
+  function setFee(uint256 fees) external onlyOwner {
+    fee = fees;
+  }
+
   //Withdraw money from contract
   function withdraw(uint amount) external onlyOwner {
     require(amount < address(this).balance, "You cannot withdraw more than what is available in the contract");
@@ -81,5 +88,5 @@ contract HeadsOrTails {
   }
 
   // Accept any incoming amount
-  function () external payable {}
+  receive() external payable {}
 }
